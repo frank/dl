@@ -97,10 +97,6 @@ def train():
     train_accuracies = []
     train_losses = []
 
-    # list of dev accuracies and losses
-    dev_accuracies = []
-    dev_losses = []
-
     # list of test accuracies and losses
     test_accuracies = []
     test_losses = []
@@ -113,10 +109,6 @@ def train():
         # list of training batch accuracies and losses for this epoch
         epoch_train_accuracies = []
         epoch_train_losses = []
-
-        # list of dev batch accuracies and losses for this epoch
-        epoch_dev_accuracies = []
-        epoch_dev_losses = []
 
         # list of test batch accuracies and losses for this epoch
         epoch_test_accuracies = []
@@ -164,37 +156,6 @@ def train():
 
         # run evaluation every eval_freq epochs
         if epoch % FLAGS.eval_freq == 0:
-
-            # get accuracy on the dev set
-            for batch in range(n_batches['validation']):
-                # get current batch...
-                images, labels = data_set['validation'].next_batch(FLAGS.batch_size)
-
-                # ...in the gpu
-                images = torch.from_numpy(images).type(dtype).to(device=device)
-                labels = torch.from_numpy(labels).type(dtype).to(device=device)
-
-                # forward pass
-                predictions = classifier(images)
-
-                # compute loss
-                class_labels = labels.argmax(dim=1)
-                loss = loss_function(predictions, class_labels)
-
-                # get accuracy and loss for the batch
-                epoch_dev_accuracies.append(accuracy(predictions, labels))
-                epoch_dev_losses.append(loss.item())
-
-            # store accuracy and loss
-            epoch_dev_accuracy = np.mean(epoch_dev_accuracies)
-            dev_accuracies.append(epoch_dev_accuracy)
-            writer.add_scalar("Validation accuracy vs epochs", epoch_dev_accuracy, epoch)
-
-            epoch_dev_loss = np.mean(epoch_dev_losses)
-            dev_losses.append(epoch_dev_loss)
-            writer.add_scalar("Validation loss vs epochs", epoch_dev_loss, epoch)
-
-            print("\tDEV:", round(epoch_dev_accuracy * 100, 1), "%")
 
             # get accuracy on the test set
             for batch in range(n_batches['test']):
