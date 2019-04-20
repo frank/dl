@@ -15,6 +15,7 @@ import cifar10_utils
 
 from tensorboardX import SummaryWriter
 from datetime import datetime
+import pickle as pkl
 
 # Default constants
 LEARNING_RATE_DEFAULT = 1e-4
@@ -63,9 +64,6 @@ def accuracy(predictions, targets):
 def train():
     """
     Performs training and evaluation of ConvNet model.
-
-    TODO:
-    Implement training and evaluation of ConvNet model. Evaluate your model on the whole test set each eval_freq iterations.
     """
 
     # DO NOT CHANGE SEEDS!
@@ -73,25 +71,21 @@ def train():
     np.random.seed(42)
 
     # initialize tensorboard
-    tb_name = datetime.now().strftime("%Y-%m-%d_%H-%M-%S_convnet")
-    log_dir = 'tensorboard/' + tb_name
+    run_id = datetime.now().strftime("%Y-%m-%d_%H-%M-%S_convnet")
+    log_dir = 'tensorboard/' + run_id
     writer = SummaryWriter(log_dir=log_dir)
 
     # get the dataset
-    print("Loading data...", end='')
     data_set = cifar10_utils.get_cifar10(FLAGS.data_dir)
-    print("Loaded data    ")
 
     # get the necessary components
     classifier = ConvNet(n_channels, n_classes).to(device)
     loss_function = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(classifier.parameters(), lr=FLAGS.learning_rate)
 
-    max_epochs = FLAGS.max_steps
     n_batches = {'train': int(data_set['train']._num_examples / FLAGS.batch_size),
                  'validation': int(data_set['validation']._num_examples / FLAGS.batch_size),
-                 'test': int(data_set['test']._num_examples / FLAGS.batch_size)
-    }
+                 'test': int(data_set['test']._num_examples / FLAGS.batch_size)}
 
     # list of training accuracies and losses
     train_accuracies = []
@@ -102,60 +96,50 @@ def train():
     test_losses = []
 
     # training loop
-    for epoch in range(max_epochs):
+    for step in range(FLAGS.max_steps):
 
-        print("Epoch", epoch+1)
+        print("\nStep", step+1)
 
-        # list of training batch accuracies and losses for this epoch
-        epoch_train_accuracies = []
-        epoch_train_losses = []
+        # get current batch...
+        images, labels = data_set['train'].next_batch(FLAGS.batch_size)
 
-        # list of test batch accuracies and losses for this epoch
-        epoch_test_accuracies = []
-        epoch_test_losses = []
+        # ...in the gpu
+        images = torch.from_numpy(images).type(dtype).to(device=device)
+        labels = torch.from_numpy(labels).type(dtype).to(device=device)
 
-        # iterate over the dataset
-        for batch in range(n_batches['train']):
-            # get current batch...
-            images, labels = data_set['train'].next_batch(FLAGS.batch_size)
+        # forward pass
+        predictions = classifier.forward(images)
 
-            # ...in the gpu
-            images = torch.from_numpy(images).type(dtype).to(device=device)
-            labels = torch.from_numpy(labels).type(dtype).to(device=device)
+        # compute loss
+        class_labels = labels.argmax(dim=1)
+        loss = loss_function(predictions, class_labels)
 
-            # forward pass
-            predictions = classifier.forward(images)
+        # reset gradients before backwards pass
+        optimizer.zero_grad()
 
-            # compute loss
-            class_labels = labels.argmax(dim=1)
-            loss = loss_function(predictions, class_labels)
+        # backward pass
+        loss.backward()
 
-            # reset gradients before backwards pass
-            optimizer.zero_grad()
+        # update weights
+        optimizer.step()
 
-            # backward pass
-            loss.backward()
+        # get accuracy and loss for the batch
+        train_accuracy = accuracy(predictions, labels)
+        train_accuracies.append(train_accuracy)
 
-            # update weights
-            optimizer.step()
+        writer.add_scalar("Training accuracy vs steps", train_accuracy, step)
 
-            # get accuracy and loss for the batch
-            epoch_train_accuracies.append(accuracy(predictions, labels))
-            epoch_train_losses.append(loss.item())
+        train_losses.append(loss.item())
+        writer.add_scalar("Training loss vs steps", loss.item(), step)
 
-        # store accuracy and loss for this epoch
-        epoch_train_accuracy = np.mean(epoch_train_accuracies)
-        train_accuracies.append(epoch_train_accuracy)
-        writer.add_scalar("Training accuracy vs epochs", epoch_train_accuracy, epoch)
-
-        epoch_train_loss = np.mean(epoch_train_losses)
-        train_losses.append(epoch_train_loss)
-        writer.add_scalar("Training loss vs epochs", epoch_train_accuracy, epoch)
-
-        print("\tTRAIN:", round(epoch_train_accuracy * 100, 1), "%")
+        print("\tTRAIN:", round(train_accuracy * 100, 1), "%")
 
         # run evaluation every eval_freq epochs
-        if epoch % FLAGS.eval_freq == 0:
+        if step % FLAGS.eval_freq == 0:
+
+            # list of test batch accuracies and losses for this step
+            step_test_accuracies = []
+            step_test_losses = []
 
             # get accuracy on the test set
             for batch in range(n_batches['test']):
@@ -174,19 +158,33 @@ def train():
                 loss = loss_function(predictions, class_labels)
 
                 # get accuracy and loss for the batch
-                epoch_test_accuracies.append(accuracy(predictions, labels))
-                epoch_test_losses.append(loss.item())
+                step_test_accuracies.append(accuracy(predictions, labels))
+                step_test_losses.append(loss.item())
 
             # store accuracy and loss
-            epoch_test_accuracy = np.mean(epoch_test_accuracies)
+            epoch_test_accuracy = np.mean(step_test_accuracies)
             test_accuracies.append(epoch_test_accuracy)
-            writer.add_scalar("Test accuracy vs epochs", epoch_test_accuracy, epoch)
+            writer.add_scalar("Test accuracy vs epochs", epoch_test_accuracy, step)
 
-            epoch_test_loss = np.mean(epoch_test_losses)
+            epoch_test_loss = np.mean(step_test_losses)
             test_losses.append(epoch_test_loss)
-            writer.add_scalar("Test loss vs epochs", epoch_test_loss, epoch)
+            writer.add_scalar("Test loss vs epochs", epoch_test_loss, step)
 
             print("\tTEST:", round(epoch_test_accuracy * 100, 1), "%")
+
+    # save results
+    results = {
+        'train_accuracies': train_accuracies,
+        'train_losses': train_losses,
+        'test_accuracies': test_accuracies,
+        'test_losses': test_losses,
+        'eval_freq': FLAGS.eval_freq
+    }
+
+    if not os.path.exists("results/"):
+        os.makedirs("results/")
+    with open(run_id + "_results.pkl", "wb") as file:
+        pkl.dump(results, file)
 
     writer.close()
 
