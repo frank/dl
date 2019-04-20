@@ -98,8 +98,6 @@ def train():
     # training loop
     for step in range(FLAGS.max_steps):
 
-        print("\nStep", step+1)
-
         # get current batch...
         images, labels = data_set['train'].next_batch(FLAGS.batch_size)
 
@@ -132,7 +130,9 @@ def train():
         train_losses.append(loss.item())
         writer.add_scalar("Training loss vs steps", loss.item(), step)
 
-        print("\tTRAIN:", round(train_accuracy * 100, 1), "%")
+        if step % 50 == 0:
+            print("\nStep", step + 1)
+            print("\tTRAIN:", round(train_accuracy * 100, 1), "%")
 
         # run evaluation every eval_freq epochs
         if step % FLAGS.eval_freq == 0:
