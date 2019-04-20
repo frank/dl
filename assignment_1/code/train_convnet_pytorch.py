@@ -95,6 +95,9 @@ def train():
     test_accuracies = []
     test_losses = []
 
+    epoch_test_accuracy = 0
+    epoch_test_loss = 0
+
     # training loop
     for step in range(FLAGS.max_steps):
 
@@ -130,12 +133,12 @@ def train():
         train_losses.append(loss.item())
         writer.add_scalar("Training loss vs steps", loss.item(), step)
 
-        if step % 50 == 0:
-            print("\nStep", step + 1)
+        if ((step + 1) % 50) == 0 or step == 0:
+            print("\nStep", step+1)
             print("\tTRAIN:", round(train_accuracy * 100, 1), "%")
 
         # run evaluation every eval_freq epochs
-        if step % FLAGS.eval_freq == 0:
+        if (step + 1) % FLAGS.eval_freq == 0 or (step + 1) == FLAGS.max_steps:
 
             # list of test batch accuracies and losses for this step
             step_test_accuracies = []
@@ -164,13 +167,14 @@ def train():
             # store accuracy and loss
             epoch_test_accuracy = np.mean(step_test_accuracies)
             test_accuracies.append(epoch_test_accuracy)
-            writer.add_scalar("Test accuracy vs epochs", epoch_test_accuracy, step)
 
             epoch_test_loss = np.mean(step_test_losses)
             test_losses.append(epoch_test_loss)
-            writer.add_scalar("Test loss vs epochs", epoch_test_loss, step)
 
             print("\tTEST:", round(epoch_test_accuracy * 100, 1), "%")
+
+        writer.add_scalar("Test accuracy vs epochs", epoch_test_accuracy, step)
+        writer.add_scalar("Test loss vs epochs", epoch_test_loss, step)
 
     # save results
     results = {
@@ -183,7 +187,7 @@ def train():
 
     if not os.path.exists("results/"):
         os.makedirs("results/")
-    with open(run_id + "_results.pkl", "wb") as file:
+    with open("results/" + run_id + "_results.pkl", "wb") as file:
         pkl.dump(results, file)
 
     writer.close()
