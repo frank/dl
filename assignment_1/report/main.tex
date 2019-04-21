@@ -15,7 +15,7 @@
 \usepackage{amsthm}
 \usepackage{caption}
 \usepackage{multirow}
-
+\usepackage{enumerate}
 \renewcommand{\thesubsubsection}{\thesubsection\,\alph{subsubsection})}
 
 \title{Assignment 1\\MLPs, CNNs and Backpropagation}
@@ -210,25 +210,80 @@ In practice, since the final update for a batch is computed as the average of th
 
 \subsection{NumPy implementation}
 
+I did not have time to do this part of the assignment.
+
 % ########################### NEW SECTION ###########################
 \section{PyTorch MLP}
+
+The MLP was built according to the instructions in the given files. Each training step consists of a forward pass using one mini-batch, and a backward pass given the loss computed using the cross-entropy function. The chosen optimizer was Adam.
+
+The fine-tuning process in order to get a decent accuracy occurred in steps, which I report in order:
+
+\begin{enumerate}[(1)]
+  \item The first run was done with the default parameters, which yielded training accuracy of $37.5 \%$ and test accuracy of $42.8 \%$.
+
+  \item The number of steps was increased to $2500$ to evaluate if longer training was beneficial. The result was a training accuracy of $45.5 \%$ and a test accuracy of $43.4 \%$, which means the longer training is not beneficial and other parameters need to be tuned.
+
+  \item The hidden layers were increased to two, each with size $512$. The result was a training accuracy of $48.0 \%$ and a test accuracy of $43.9 \%$, which is still quite low, but the network is still not overfitting.
+
+  \item The learning rate was decreased to $1 \times 10^{-4}$, which raised the training accuracy to $75.0 \%$ and the test accuracy to $49.7 \%$.
+
+  \item One more layer was added, still of size $512$. This resulted in an increased training accuracy of $77.5 \%$ and a test accuracy of $51.6 \%$.
+
+  \item Following the pattern of increasing accuracy with more depth, one more layer was added, still of size $512$. The result was a training accuracy of $81.0 \%$ and a test accuracy of $53.3 \%$
+
+  \item While the accuracy was now high enough, the network was overfitting considerably. In order to fix that, an $L_2$ regularization term of $1 \times 10^{-3}$ was used, along with a dropout rate of $0.2$. This both reduced overfitting and increased test accuracy, yielding a training accuracy of $55.0 \%$ and a test accuracy of $53.9 \%$.
+\end{enumerate}
+
+The final results were eventually obtained by using the described parameters and running the training for $5000$ steps. The result was a test accuracy of $55.7 \%$ and a loss of $1.265$. The training curves are shown in Figure \ref{fig:mlp_results}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.7]{img/mlp_results.png}
+    \caption{Training and test accuracies and losses for the MLP model. The test accuracies and losses are produced every 500 steps. The final test accuracy was $55.7 \%$}
+    \label{fig:mlp_results}
+\end{figure}
 
 % ########################### NEW SECTION ###########################
 \section{Custom Module: Batch Normalization}
 
 \subsection{Automatic differentiation}
 
+The automatic differentiation of the batch normalization was implemented as indicated in the code and in the report.
+
+By applying the resulting batch normalization layer after each hidden layer in the MLP model, the test accuracy increased to $57.1 \%$. The loss also decreased to $1.249$. The training curves are shown in Figure \ref{fig:mlp_batchnorm_results}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.7]{img/mlp_results.png}
+    \caption{Training and test accuracies and losses for the MLP model using batch normalization. The test accuracies and losses are produced every 500 steps. The final test accuracy was $57.1 \%$}
+    \label{fig:mlp_batchnorm_results}
+\end{figure}
+
 \subsection{Manual implementation of backward pass}
 
-\subsubsection{}
+I did not have time to do this part of the assignment.
 
-\subsubsection{}
-
-\subsubsection{}
+% \subsubsection{}
+%
+% \subsubsection{}
+%
+% \subsubsection{}
 
 % ########################### NEW SECTION ###########################
 \section{PyTorch CNN}
 
+The training and test accuracies and losses are shown in Figure \ref{fig:convnet_results}.
 
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.7]{img/convnet_results.png}
+    \caption{Training and test accuracies and losses for the ConvNet model. The test accuracies and losses are produced every 500 steps. The final test accuracy was $77.3\%$}
+    \label{fig:convnet_results}
+\end{figure}
+
+By looking at the plot, we can see that by the end of the training, the network has overfitted on the training data. This occurs around step 3000, which is approximately where the training accuracy becomes higher than the testing accuracy -- and, conversely, where the training loss becomes lower than the testing loss.
+
+The test accuracy measured in the final epoch is $77.3\%$, while the final test loss is $0.681$.
 
 \end{document}

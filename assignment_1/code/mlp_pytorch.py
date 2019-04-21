@@ -9,6 +9,8 @@ from __future__ import print_function
 import torch
 from torch import nn
 
+from custom_batchnorm import CustomBatchNormAutograd
+
 # Torch settings
 torch.set_default_tensor_type(torch.cuda.FloatTensor)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -21,7 +23,7 @@ class MLP(nn.Module):
     Once initialized an MLP object can perform forward.
     """
 
-    def __init__(self, n_inputs, n_hidden, n_classes, dropout=0.):
+    def __init__(self, n_inputs, n_hidden, n_classes, dropout=0., batchnorm=False):
         """
         Initializes MLP object.
 
@@ -47,6 +49,7 @@ class MLP(nn.Module):
                 layers.append(nn.Linear(self.layer_sizes[layer_n],
                                         self.layer_sizes[layer_n + 1]))
                 layers.append(nn.ReLU())
+                layers.append(CustomBatchNormAutograd(self.layer_sizes[layer_n + 1]))
                 if dropout > 0.:
                     layers.append(nn.Dropout(0.2))
             else:

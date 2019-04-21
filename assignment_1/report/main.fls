@@ -1,4 +1,4 @@
-PWD D:/Documents/SCUOLA/Master/2018-2019/5th block/Deep Learning/assignment_1/report
+PWD D:/Documents/SCUOLA/Master/2018-2019/5th block/Deep Learning/dl/assignment_1/report
 INPUT d:/Program Files/texlive/2018/texmf.cnf
 INPUT d:/Program Files/texlive/2018/texmf-dist/web2c/texmf.cnf
 INPUT d:/Program Files/texlive/2018/texmf-var/web2c/pdftex/pdflatex.fmt
@@ -161,6 +161,14 @@ INPUT d:/Program Files/texlive/2018/texmf-dist/fonts/vf/adobe/times/ptmr8t.vf
 INPUT d:/Program Files/texlive/2018/texmf-dist/fonts/tfm/adobe/times/ptmr8r.tfm
 INPUT d:/Program Files/texlive/2018/texmf-dist/fonts/vf/adobe/times/ptmb8t.vf
 INPUT d:/Program Files/texlive/2018/texmf-dist/fonts/tfm/adobe/times/ptmb8r.tfm
+INPUT img/mlp_results.png
+INPUT ./img/mlp_results.png
+INPUT ./img/mlp_results.png
+INPUT img/mlp_results.png
+INPUT ./img/mlp_results.png
+INPUT img/convnet_results.png
+INPUT ./img/convnet_results.png
+INPUT ./img/convnet_results.png
 INPUT main.aux
 INPUT ./main.out
 INPUT ./main.out

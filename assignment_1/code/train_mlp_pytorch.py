@@ -23,8 +23,9 @@ dtype = torch.FloatTensor
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Parameters
-weight_decay = 1e-2
+weight_decay = 1e-3
 dropout = 0.2
+batchnorm = True
 
 # Default constants
 DNN_HIDDEN_UNITS_DEFAULT = '512, 512, 512, 512'  # default: 100
@@ -85,6 +86,8 @@ def train():
     # -------------------------- UNCKECKED -------------------
     # initialize tensorboard
     run_id = datetime.now().strftime("%Y-%m-%d_%H-%M-%S_mlp")
+    if batchnorm:
+        run_id = run_id + '_batchnorm'
     log_dir = 'tensorboard/' + run_id
     writer = SummaryWriter(log_dir=log_dir)
 
@@ -103,7 +106,8 @@ def train():
     classifier = MLP(n_inputs,
                      dnn_hidden_units,
                      n_classes,
-                     dropout).to(device)
+                     dropout,
+                     batchnorm).to(device)
     loss_function = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(classifier.parameters(),
                                  lr=FLAGS.learning_rate,

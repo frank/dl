@@ -1,5 +1,5 @@
 # Fdb version 3
-["pdflatex"] 1555263139 "main.tex" "main.pdf" "main" 1555263140
+["pdflatex"] 1555878150 "main.tex" "main.pdf" "main" 1555878152
   "d:/Program Files/texlive/2018/texmf-dist/fonts/enc/dvips/base/8r.enc" 1541110606 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "d:/Program Files/texlive/2018/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc" 1541110321 2971 def0b6c1f0b107b3b936def894055589 ""
   "d:/Program Files/texlive/2018/texmf-dist/fonts/map/fontname/texfonts.map" 1541110825 3332 103109f5612ad95229751940c61aada0 ""
@@ -94,12 +94,14 @@
   "d:/Program Files/texlive/2018/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1541112792 2999933 ccb55f5fb5e6ac407a85f59d9473ff89 ""
   "d:/Program Files/texlive/2018/texmf-var/web2c/pdftex/pdflatex.fmt" 1541112843 4225377 e76bf122c455c5463b5036f4e7f67114 ""
   "d:/Program Files/texlive/2018/texmf.cnf" 1541112774 673 4ae7b2f49cee444c5343a45b5d0f169c ""
-  "main.aux" 1555263140 2246 fc4abac7582000c3127d0e9e324547a4 ""
-  "main.out" 1555263140 905 cdb7c89f7764295db19a04f52572b511 ""
-  "main.tex" 1555017301 9854 082082d43f6f4e3c6ee715acd381ddc7 ""
+  "img/convnet_results.png" 1555849402 87237 9573dab39ead656445fa9f466ad4cec5 ""
+  "img/mlp_results.png" 1555874454 68974 dc94852b4cda02bf5bec0d74f8b99151 ""
+  "main.aux" 1555878152 3447 e1ca0a252e5c3935edef95aa76098353 ""
+  "main.out" 1555878152 725 079bf862e2d9db44d09be6c45a5490bc ""
+  "main.tex" 1555878145 13983 5b9e813c6c7fabfa537cb09557952c91 ""
   "nips_2018.sty" 1554977440 10649 b0c2fcd34861e0766c7bd47975d32438 ""
   (generated)
   "main.pdf"
-  "main.log"
   "main.out"
   "main.aux"
+  "main.log"

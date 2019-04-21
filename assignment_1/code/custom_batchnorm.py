@@ -28,20 +28,15 @@ class CustomBatchNormAutograd(nn.Module):
         Args:
           n_neurons: int specifying the number of neurons
           eps: small float to be added to the variance for stability
-
-        TODO:
-          Save parameters for the number of neurons and eps.
-          Initialize parameters gamma and beta via nn.Parameter
         """
         super(CustomBatchNormAutograd, self).__init__()
 
-        ########################
-        # PUT YOUR CODE HERE  #
-        #######################
-        raise NotImplementedError
-        ########################
-        # END OF YOUR CODE    #
-        #######################
+        # parameters
+        self.n_neurons = n_neurons
+        self.eps = eps
+
+        self.gamma = nn.Parameter(torch.ones(self.n_neurons))
+        self.beta = nn.Parameter(torch.zeros(self.n_neurons))
 
     def forward(self, input):
         """
@@ -51,20 +46,23 @@ class CustomBatchNormAutograd(nn.Module):
           input: input tensor of shape (n_batch, n_neurons)
         Returns:
           out: batch-normalized tensor
-
-        TODO:
-          Check for the correctness of the shape of the input tensor.
-          Implement batch normalization forward pass as given in the assignment.
-          For the case that you make use of torch.var be aware that the flag unbiased=False should be set.
         """
 
-        ########################
-        # PUT YOUR CODE HERE  #
-        #######################
-        raise NotImplementedError
-        ########################
-        # END OF YOUR CODE    #
-        #######################
+        # check input size
+        assert len(input.size()) == 2
+        assert input.size()[1] == self.n_neurons
+
+        # compute mean
+        mu = input.mean(0)
+
+        # compute variance
+        sigma = input.var(0, unbiased=False)
+
+        # normalize
+        input_hat = torch.div(torch.sub(input, mu), torch.sqrt(sigma + self.eps))
+
+        # scale and shift
+        out = self.gamma * input_hat + self.beta
 
         return out
 
