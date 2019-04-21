@@ -23,11 +23,11 @@ dtype = torch.FloatTensor
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Parameters
-weight_decay = 1e-2  # left
-dropout = 0.  # right
+weight_decay = 1e-2
+dropout = 0.2
 
 # Default constants
-DNN_HIDDEN_UNITS_DEFAULT = '512, 512, 256, 256'  # default: 100
+DNN_HIDDEN_UNITS_DEFAULT = '512, 512, 512, 512'  # default: 100
 LEARNING_RATE_DEFAULT = 1e-4  # default: 2e-3
 MAX_STEPS_DEFAULT = 5000
 BATCH_SIZE_DEFAULT = 200
@@ -132,6 +132,7 @@ def train():
         labels = torch.from_numpy(labels).type(dtype).to(device=device)
 
         # forward pass
+        classifier.train()
         predictions = classifier.forward(images)
 
         # compute loss
@@ -168,6 +169,7 @@ def train():
             step_test_losses = []
 
             # get accuracy on the test set
+            classifier.eval()
             for batch in range(n_batches['test']):
                 # get current batch...
                 images, labels = data_set['test'].next_batch(FLAGS.batch_size)
