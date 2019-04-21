@@ -39,7 +39,7 @@ n_channels = 3
 n_classes = 10
 
 
-def accuracy(predictions, targets):
+def accuracy(predictions, labels):
     """
     Computes the prediction accuracy, i.e. the average of correct predictions
     of the network.
@@ -54,7 +54,7 @@ def accuracy(predictions, targets):
                 i.e. the average correct predictions over the whole batch
     """
     _, y = predictions.max(1)
-    _, t = targets.max(1)
+    _, t = labels.max(1)
     if len(y) != len(t):
         print("WARNING: size mismatch between predictions and targets")
     accuracies = [1 if y[i] == t[i] else 0 for i in range(len(y))]
