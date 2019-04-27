@@ -1,5 +1,8 @@
 assignment_1/code/cifar10/
 
+# PyCharm
+.idea/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
