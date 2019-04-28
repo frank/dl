@@ -16,6 +16,8 @@
 \usepackage{caption}
 \usepackage{multirow}
 \usepackage{enumitem}
+\usepackage{listings}
+\usepackage{todonotes}
 
 \renewcommand{\thesubsubsection}{\thesubsection\,\alph{subsubsection})}
 \newcommand{\del}[2]{\ensuremath{\frac{\partial #1}{\partial #2}}}
@@ -88,8 +90,28 @@
   This fact causes the well known problem of vanishing or exploding gradients. When performing an update over a large number of timesteps, the gradient that should pertain to the gradients further back in time either reduces to $0$ or it increases to infinity, depending on whether the hidden weights are small or large. This makes it very hard to train such networks for long sequences, since those longer time dependencies can't be learned.
 
   \item
+  The implementation of the vanilla recurrent neural network was done as instructed.
+
+  In the \texttt{train.py} script, this line of code is used:
+  \begin{lstlisting}[language=Python]
+  torch.nn.utils.clip_grad_norm_(model.parameters(),
+                                 max_norm=config.max_norm)
+  \end{lstlisting}
+  Note that \texttt{clip\_grad\_norm\_} was used instead of \texttt{clip\_grad\_norm} since the latter is deprecated. This is a way to avoid the problem of exploding gradients. This function clips the maximum value of the norm of the gradients. The effect is that there is no risk of multiplying gradients of high magnitude over and over, thus leading to huge update steps that make it impossible for the network to learn. Note, however, that the vanishing gradient problem still exists since the gradients can have a very low norm.
+
   \item
+  After the first rounds of experimentation, I noticed sudden drops in training accuracy after convergence, which all quickly recovered. I attribute those to the exploding gradients, and tried using lower values for the maximum norm value used in the clipping of the gradients. After trying values of $10$, $5$, $2$, $1$, and $0.5$ with a baseline sequence length of 5, however, I realised that except for slight variations the problem still occurred. As such I decided to stick with the original value of $10$.
+
+  All parameters were kept to their default values, except for the number of training steps, which was varied depending on the convergence time of each input sequence length.
+
+  \todo{Run vanilla RNN experiments with different sequence length (5 to 50)}
+
   \item
+  The advantage of RMSprop is the usage of an adaptive learning rate. This element comes into play as the parameter update is calculated using a running average of the previous squared gradients, weighted according to the decay hyper-parameter. The result is that each new gradient is normalized based on the norms of the current and previous gradients. This leads to a sensible way of reducing the damage caused by exploding gradients.
+
+  Adam works in a similar way, but it also incorporates a momentum term. This is done by computing the next gradient update as a running weighted average of the previous gradients, each of which is normalized in a way similar to that which RMSprop uses. The effect is that each parameter update is influenced by the gradients that preceded it: if the gradient is descending a steep hill it will accelerate, while if it is traversing a mostly flat region with uncertain topology it will slow down.
+
+  Both of these strategies are beneficial towards training, and they surpass SGD in training speed and accuracy.
 \end{enumerate}
 
 %###################### NEW SUBSECTION #######################
@@ -98,13 +120,31 @@
 \begin{enumerate}[label=\textbf{1.\arabic*}]
   \setcounter{enumi}{4}
   \item
-
   \begin{enumerate}[label=\textbf{(\alph*)}]
     \item
+    The input modulation gate $\mathbf{g}^{(t)}$ determines how each feature of the input affects the hidden state of the LSTM cell given the previous hidden state. Since the nonlinearity used in this gate is the $tanh$ function, each output feature will be in the range $(-1, 1)$, which makes sense since it normalizes the effect that each variable may have on the cell state, while also centering the activations around $0$.
+
+    The input gate $\mathbf{i}^{(t)}$ determines how much influence each feature update, computed using $\mathbf{g}^{(t)}$, should affect the cell state. The softmax nonlinearity is a good choice for this purpose since its value is in the range $(0, 1)$. This means that when $\mathbf{i}^{(t)}$ is multiplied with $\mathbf{g}^{(t)}$, the magnitude of each feature update is modulated, but it can never exceed the original range of $(-1, 1)$.
+
+    The forget gate $\mathbf{f}^{(t)}$ is similar in nature to the input gate: it modulates the magnitude of the cell state as it flows through the cell, thus controlling which features are forgotten and which ones are left unchanged. The nonlinearity used in this gate is again the softmax function. For the same reason as the input gate, multiplying each feature of the cell state with a number in the range $(0, 1)$ makes it so that each feature is reduced in magnitude if it should be forgotten, and left unchanged if not (with all the steps inbetween).
+
+    The output gate $\mathbf{o}^{(t)}$ works once again in a similar way: it controls which parts of the cell state are forgotten, so that the rest is both given as the cell output and as the hidden state for the next time step. This gate works with the well chosen sigmoid nonlinearity according to the same principle as described in the previous two paragraphs. The cell state, after being passed through a $tanh$ function, is filtered by modulating the magnitude of each filter.
+
     \item
+    In calculating the number of trainable parameters, both $T$ and $m$ don't come into play, since the parameters are shared across time steps and batch samples. To compute the number of parameters, it suffices to sum the number of parameters of each weight matrix used on the input ($n \times d$), of each weight matrix used on the hidden and cell states ($n \times n$), and of each bias vector ($n$). The result is:
+
+    \begin{align*}
+      N &= 4 (n \times d) + 5 (n \times n) + 5 n \\
+      &= 5n^2 + 9n + 4d
+    \end{align*}
+
   \end{enumerate}
 
   \item
+  The LSTM network was implemented as instructed. The only difference was, instead of summing the linear transformations of input and previous hidden state, the two were concatenated and linearly transformed with a combined weight matrix.
+
+  \todo{Run the same experiment as for the RNN}
+
 \end{enumerate}
 
 %################################# NEW SECTION ##################################

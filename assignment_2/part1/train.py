@@ -26,54 +26,111 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-from part1.dataset import PalindromeDataset
-from part1.vanilla_rnn import VanillaRNN
-from part1.lstm import LSTM
-
+from dataset import PalindromeDataset
+from vanilla_rnn import VanillaRNN
+from lstm import LSTM
 
 # You may want to look into tensorboardX for logging
-# from tensorboardX import SummaryWriter
+from tensorboardX import SummaryWriter
+
+import pickle
+import os
+
 
 ################################################################################
 
-def train(config):
+def get_accuracy(predictions, t):
+    y = torch.argmax(predictions, 1)
+    assert len(y) == len(t)
+    accuracy = sum(y == t).item() / len(y)
+    return accuracy
+
+
+def save_results(accuracies, losses, run_id, model_type, input_length):
+    dir_name = 'results/' + model_type.lower() + '/'
+    if not os.path.exists(dir_name):
+        os.mkdir(dir_name)
+    with open(dir_name + run_id + '_' + str(input_length) + '.pkl', 'wb') as file:
+        pickle.dump({'accuracies': accuracies,
+                     'losses': losses}, file)
+
+
+def train(config, device="cpu"):
     assert config.model_type in ('RNN', 'LSTM')
 
-    # Initialize the device which to run the model on
-    device = torch.device(config.device)
+    # Tensorboard summary writer
+    run_id = datetime.now().strftime("%Y-%m-%d_%H-%M-%S_" + config.model_type.lower() + '_' + str(config.input_length))
+    log_dir = 'tensorboard/' + config.model_type.lower() + '/' + run_id
+    writer = SummaryWriter(log_dir=log_dir)
+
+    # Torch settings
+    torch.set_default_tensor_type(torch.cuda.FloatTensor)  # fixme
+    dtype = torch.float
 
     # Initialize the model that we are going to use
-    model = None  # fixme
+    if config.model_type == 'RNN':
+        model = VanillaRNN(config.input_length, config.input_dim,
+                           config.num_hidden, config.num_classes,
+                           config.batch_size, device=device).to(device)
+    elif config.model_type == 'LSTM':
+        model = LSTM(config.input_length, config.input_dim,
+                     config.num_hidden, config.num_classes,
+                     config.batch_size, device=device).to(device)
 
     # Initialize the dataset and data loader (note the +1)
     dataset = PalindromeDataset(config.input_length + 1)
     data_loader = DataLoader(dataset, config.batch_size, num_workers=1)
 
     # Setup the loss and optimizer
-    criterion = None  # fixme
-    optimizer = None  # fixme
+    criterion = torch.nn.CrossEntropyLoss()
+    optimizer = torch.optim.RMSprop(model.parameters(),
+                                    lr=config.learning_rate)
 
+    # Accuracy and loss to be saved
+    accuracies = []
+    losses = []
+
+    model.train()
     for step, (batch_inputs, batch_targets) in enumerate(data_loader):
 
         # Only for time measurement of step through network
         t1 = time.time()
 
-        # Add more code here ...
+        # Load batches in the GPU
+        batch_inputs = batch_inputs.to(device=device)
+        batch_targets = batch_targets.to(device=device)
 
-        ############################################################################
-        # QUESTION: what happens here and why?
-        ############################################################################
-        torch.nn.utils.clip_grad_norm(model.parameters(), max_norm=config.max_norm)
-        ############################################################################
+        # Forward pass
+        predictions = model.forward(batch_inputs)
 
-        # Add more code here ...
+        # Compute loss
+        loss = criterion(predictions, batch_targets)
 
-        loss = np.inf  # fixme
-        accuracy = 0.0  # fixme
+        # Reset gradients before backwards pass
+        optimizer.zero_grad()
+
+        # Backward pass
+        loss.backward()
+
+        # Clipping gradients to avoid exploding gradient problem
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=config.max_norm)
+
+        # Update weights
+        optimizer.step()
+
+        # Compute accuracy
+        accuracy = get_accuracy(predictions, batch_targets)
 
         # Just for time measurement
         t2 = time.time()
         examples_per_second = config.batch_size / float(t2 - t1)
+
+        # Add accuracy and loss to the writer
+        writer.add_scalars('accuracy_and_loss', {'acc': accuracy, 'loss': loss}, step)
+
+        # Store accuracy and loss
+        accuracies.append(accuracy)
+        losses.append(loss)
 
         if step % 10 == 0:
             print("[{}] Train Step {:04d}/{:04d}, Batch Size = {}, Examples/Sec = {:.2f}, "
@@ -88,11 +145,10 @@ def train(config):
             # https://github.com/pytorch/pytorch/pull/9655
             break
 
+    save_results(accuracies, losses, run_id, config.model_type, config.input_length)
+    writer.close()
     print('Done training.')
 
-
-################################################################################
-################################################################################
 
 if __name__ == "__main__":
     # Parse training configuration
@@ -113,4 +169,4 @@ if __name__ == "__main__":
     config = parser.parse_args()
 
     # Train the model
-    train(config)
+    train(config, device=config.device)

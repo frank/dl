@@ -31,18 +31,18 @@ from torch.utils.data import DataLoader
 from part2.dataset import TextDataset
 from part2.model import TextGenerationModel
 
+
 ################################################################################
 
 def train(config):
-
     # Initialize the device which to run the model on
     device = torch.device(config.device)
 
     # Initialize the model that we are going to use
-    model = TextGenerationModel( ... )  # fixme
+    model = TextGenerationModel(...)  # fixme
 
     # Initialize the dataset and data loader (note the +1)
-    dataset = TextDataset( ... )  # fixme
+    dataset = TextDataset(...)  # fixme
     data_loader = DataLoader(dataset, config.batch_size, num_workers=1)
 
     # Setup the loss and optimizer
@@ -58,20 +58,19 @@ def train(config):
         # Add more code here ...
         #######################################################
 
-        loss = np.inf   # fixme
+        loss = np.inf  # fixme
         accuracy = 0.0  # fixme
 
         # Just for time measurement
         t2 = time.time()
-        examples_per_second = config.batch_size/float(t2-t1)
+        examples_per_second = config.batch_size / float(t2 - t1)
 
         if step % config.print_every == 0:
-
             print("[{}] Train Step {:04d}/{:04d}, Batch Size = {}, Examples/Sec = {:.2f}, "
                   "Accuracy = {:.2f}, Loss = {:.3f}".format(
-                    datetime.now().strftime("%Y-%m-%d %H:%M"), step,
-                    config.train_steps, config.batch_size, examples_per_second,
-                    accuracy, loss
+                datetime.now().strftime("%Y-%m-%d %H:%M"), step,
+                config.train_steps, config.batch_size, examples_per_second,
+                accuracy, loss
             ))
 
         if step == config.sample_every:
@@ -86,11 +85,10 @@ def train(config):
     print('Done training.')
 
 
- ################################################################################
- ################################################################################
+################################################################################
+################################################################################
 
 if __name__ == "__main__":
-
     # Parse training configuration
     parser = argparse.ArgumentParser()
 
