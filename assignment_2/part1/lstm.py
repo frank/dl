@@ -23,9 +23,7 @@ import torch
 import torch.nn as nn
 
 # Torch settings
-torch.set_default_tensor_type(torch.FloatTensor)  # fixme
 dtype = torch.FloatTensor
-device = "cpu"  # torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # fixme
 
 
 ################################################################################
@@ -34,6 +32,11 @@ class LSTM(nn.Module):
 
     def __init__(self, seq_length, input_dim, num_hidden, num_classes, batch_size, device='cpu'):
         super(LSTM, self).__init__()
+
+        if device == 'cpu':
+            torch.set_default_tensor_type(torch.FloatTensor)
+        elif device == 'cuda:0':
+            torch.set_default_tensor_type(torch.cuda.FloatTensor)
 
         # Non-trainable parameters
         self.seq_length = seq_length

@@ -46,13 +46,15 @@ def get_accuracy(predictions, t):
     return accuracy
 
 
-def save_results(accuracies, losses, run_id, model_type, input_length):
+def save_results(accuracies, losses, run_id, model_type, input_length, accuracy):
     dir_name = 'results/' + model_type.lower() + '/'
     if not os.path.exists(dir_name):
         os.mkdir(dir_name)
-    with open(dir_name + run_id + '_' + str(input_length) + '.pkl', 'wb') as file:
+    with open(dir_name + run_id + '.pkl', 'wb') as file:
         pickle.dump({'accuracies': accuracies,
-                     'losses': losses}, file)
+                     'losses': losses,
+                     'input_length': input_length,
+                     'final_accuracy': accuracy}, file)
 
 
 def train(config, device="cpu"):
@@ -64,7 +66,10 @@ def train(config, device="cpu"):
     writer = SummaryWriter(log_dir=log_dir)
 
     # Torch settings
-    torch.set_default_tensor_type(torch.cuda.FloatTensor)  # fixme
+    if device == 'cpu':
+        torch.set_default_tensor_type(torch.FloatTensor)
+    elif device == 'cuda:0':
+        torch.set_default_tensor_type(torch.cuda.FloatTensor)
     dtype = torch.float
 
     # Initialize the model that we are going to use
@@ -89,6 +94,11 @@ def train(config, device="cpu"):
     # Accuracy and loss to be saved
     accuracies = []
     losses = []
+
+    # Useful for convergence check
+    avg_range = 200
+    last_accuracy = 0
+    convergence_threshold = 1e-4
 
     model.train()
     for step, (batch_inputs, batch_targets) in enumerate(data_loader):
@@ -132,7 +142,8 @@ def train(config, device="cpu"):
         accuracies.append(accuracy)
         losses.append(loss)
 
-        if step % 10 == 0:
+        # Print information
+        if step % 100 == 0:
             print("[{}] Train Step {:04d}/{:04d}, Batch Size = {}, Examples/Sec = {:.2f}, "
                   "Accuracy = {:.2f}, Loss = {:.3f}".format(
                 datetime.now().strftime("%Y-%m-%d %H:%M"), step,
@@ -140,14 +151,23 @@ def train(config, device="cpu"):
                 accuracy, loss
             ))
 
+        # Check for convergence
+        if step % avg_range == 0 and step != 0:
+            avg_accuracy = np.mean(accuracies[-avg_range:])
+            if np.abs(avg_accuracy - last_accuracy) < convergence_threshold:
+                print("The model has converged with accuracy", avg_accuracy, "(" +
+                      ("+" if avg_accuracy > last_accuracy else "-") + str(np.abs(avg_accuracy - last_accuracy)) + ")")
+                break
+            last_accuracy = avg_accuracy
+
         if step == config.train_steps:
             # If you receive a PyTorch data-loader error, check this bug report:
             # https://github.com/pytorch/pytorch/pull/9655
             break
 
-    save_results(accuracies, losses, run_id, config.model_type, config.input_length)
+    save_results(accuracies, losses, run_id, config.model_type, config.input_length, last_accuracy)
     writer.close()
-    print('Done training.')
+    print('Done training. Accuracy:', avg_accuracy)
 
 
 if __name__ == "__main__":

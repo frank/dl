@@ -24,7 +24,6 @@ import torch.nn as nn
 
 
 # Torch settings
-torch.set_default_tensor_type(torch.cuda.FloatTensor)  # fixme
 dtype = torch.FloatTensor
 
 
@@ -34,6 +33,11 @@ class VanillaRNN(nn.Module):
 
     def __init__(self, seq_length, input_dim, num_hidden, num_classes, batch_size, device='cpu'):
         super(VanillaRNN, self).__init__()
+
+        if device == 'cpu':
+            torch.set_default_tensor_type(torch.FloatTensor)
+        elif device == 'cuda:0':
+            torch.set_default_tensor_type(torch.cuda.FloatTensor)
 
         # Non-trainable parameters
         self.seq_length = seq_length

@@ -99,12 +99,17 @@
   \end{lstlisting}
   Note that \texttt{clip\_grad\_norm\_} was used instead of \texttt{clip\_grad\_norm} since the latter is deprecated. This is a way to avoid the problem of exploding gradients. This function clips the maximum value of the norm of the gradients. The effect is that there is no risk of multiplying gradients of high magnitude over and over, thus leading to huge update steps that make it impossible for the network to learn. Note, however, that the vanishing gradient problem still exists since the gradients can have a very low norm.
 
-  \item
-  After the first rounds of experimentation, I noticed sudden drops in training accuracy after convergence, which all quickly recovered. I attribute those to the exploding gradients, and tried using lower values for the maximum norm value used in the clipping of the gradients. After trying values of $10$, $5$, $2$, $1$, and $0.5$ with a baseline sequence length of 5, however, I realised that except for slight variations the problem still occurred. As such I decided to stick with the original value of $10$.
+  \item\label{q:vanilla_exp}
+  After the first rounds of experimentation, I noticed sudden drops in training accuracy after convergence, which all quickly recovered. I attribute those to the exploding gradients, and tried using lower values for the maximum norm value used in the clipping of the gradients. After trying values of $10$, $5$, $2$, $1$, and $0.5$ with a baseline sequence length of 5, however, I realised that except for slight variations the problem still occurred. As such I decided to stick with the original value of $10$. All other parameters were kept at their default values.
 
-  All parameters were kept to their default values, except for the number of training steps, which was varied depending on the convergence time of each input sequence length.
+  The strategy used to detect convergence is as follows: each $200$ training steps, the average accuracy is computed for the last $200$ steps. When the absolute difference between the current average accuracy and the previous average accuracy is smaller than $10^{-3}$, we say that the model has converged, and store the last average accuracy. The tested input lengths were in the range $[5, 35]$. The result is shown in Figure \ref{fig:results_vanilla}.
 
-  \todo{Run vanilla RNN experiments with different sequence length (5 to 50)}
+  \begin{figure}[h]
+      \centering
+      \includegraphics[scale=0.6]{img/results_vanilla.pdf}
+      \caption{Average accuracy of the Vanilla RNN model in the last 200 training steps plotted against input length.}
+      \label{fig:results_vanilla}
+  \end{figure}
 
   \item
   The advantage of RMSprop is the usage of an adaptive learning rate. This element comes into play as the parameter update is calculated using a running average of the previous squared gradients, weighted according to the decay hyper-parameter. The result is that each new gradient is normalized based on the norms of the current and previous gradients. This leads to a sensible way of reducing the damage caused by exploding gradients.
@@ -142,6 +147,8 @@
 
   \item
   The LSTM network was implemented as instructed. The only difference was, instead of summing the linear transformations of input and previous hidden state, the two were concatenated and linearly transformed with a combined weight matrix.
+
+  The experimental setup for evaluating this model was identical to that used in question \ref{q:vanilla_exp}. The results are shown in Figure \ref{fig:results_lstm}.
 
   \todo{Run the same experiment as for the RNN}
 
