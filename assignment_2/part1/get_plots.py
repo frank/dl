@@ -37,4 +37,4 @@ def plot_lstm():
 
 
 if __name__ == '__main__':
-    plot_vanilla()
+    plot_lstm()
