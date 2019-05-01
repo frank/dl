@@ -29,6 +29,7 @@ class TextDataset(data.Dataset):
         self._seq_length = seq_length
         self._data = open(filename, 'r').read()
         self._chars = list(set(self._data))
+        self._chars.sort()
         self._data_size, self._vocab_size = len(self._data), len(self._chars)
         print("Initialize dataset with {} characters, {} unique.".format(
             self._data_size, self._vocab_size))
@@ -48,6 +49,19 @@ class TextDataset(data.Dataset):
     def __len__(self):
         return self._data_size
 
+    def convert_to_idx(self, ch):
+        return self._char_to_ix[ch]
+
+    def convert_to_one_hot(self, ch):
+        ix = self._char_to_ix[ch]
+        one_hot = [0] * self._vocab_size
+        one_hot[ix] = 1
+        return one_hot
+
     @property
     def vocab_size(self):
         return self._vocab_size
+
+    @property
+    def vocab(self):
+        return self._chars
