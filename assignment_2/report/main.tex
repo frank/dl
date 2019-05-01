@@ -102,9 +102,9 @@
   \item\label{q:vanilla_exp}
   After the first rounds of experimentation, I noticed sudden drops in training accuracy after convergence, which all quickly recovered. I attribute those to the exploding gradients, and tried using lower values for the maximum norm value used in the clipping of the gradients. After trying values of $10$, $5$, $2$, $1$, and $0.5$ with a baseline sequence length of 5, however, I realised that except for slight variations the problem still occurred. As such I decided to stick with the original value of $10$. All other parameters were kept at their default values.
 
-  The strategy used to detect convergence is as follows: each $200$ training steps, the average accuracy is computed for the last $200$ steps. When the absolute difference between the current average accuracy and the previous average accuracy is smaller than $10^{-3}$, we say that the model has converged, and store the last average accuracy. The tested input lengths were in the range $[5, 35]$. The result is shown in Figure \ref{fig:results_vanilla}.
+  The strategy used to detect convergence is as follows: each $200$ training steps, the average accuracy is computed for the last $200$ steps. When the absolute difference between the current average accuracy and the previous average accuracy is smaller than $10^{-4}$, we say that the model has converged, and store the last average accuracy. The tested input lengths were in the range $[5, 35]$. The result is shown in Figure \ref{fig:results_vanilla}.
 
-  \begin{figure}[h]
+  \begin{figure}[ht]
       \centering
       \includegraphics[scale=0.6]{img/results_vanilla.pdf}
       \caption{Average accuracy of the Vanilla RNN model in the last 200 training steps plotted against input length.}
@@ -150,13 +150,18 @@
 
   The experimental setup for evaluating this model was identical to that used in question \ref{q:vanilla_exp}. The results are shown in Figure \ref{fig:results_lstm}.
 
-  \begin{figure}[h]
+  \begin{figure}[ht]
       \centering
       \includegraphics[scale=0.6]{img/results_LSTM.pdf}
       \caption{Average accuracy of the LSTM model in the last 200 training steps plotted against input length.}
       \label{fig:results_lstm}
   \end{figure}
 
+  The main difference between the performance of the Vanilla RNN and the LSTM is the input length which first becomes difficult for the model to deal with: 24 for the former, and 34 for the latter. It is worth noting, when looking at the LSTM plot, that in previous runs of the experiment the decrease in performance occurred sometimes for shorter sequences and sometimes for longer ones. However on average the LSTM is still able to learn longer sequences compared to the Vanilla RNN. This has to do with two main factors, both related to the ingenious design of the LSTM's gates.
+
+  The first factor is related to the function used to compute the next cell state $\mathbf{c}^{(t)}$. Since this occurs with an addition, the gradient which comes into play when backpropagating through time will have a value of $1$, thus reducing problems related to the vanishing or exploding gradient. This due to the fact that $1^n = 1$.
+
+  The second factor has to do with the flow of information inside of the LSTM cell: the input modulation gate, the input gate, the forget gate, and the output gate all serve the purpose of filtering information that flows through the cell, so as to maximise the flow of information useful for the task, and minimise the flow of useless information or noise. This has the effect of saturating and polluting the cell's state much more slowly, thus allowing for longer retention of useful information.
 \end{enumerate}
 
 %################################# NEW SECTION ##################################
