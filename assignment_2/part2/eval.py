@@ -21,6 +21,12 @@ from tensorboardX import SummaryWriter
 
 ################################################################################
 
+# Some lighthearted tomfoolery
+quit_msgs = ["Promise you'll call me back!",
+             "Am I not enough of a poet for you?",
+             "You won't find another literary genious like me!",
+             "I thought we had something going here...",
+             "Fine! I won't miss you."]
 
 def get_one_hot(start, dataset):
     one_hot = torch.zeros(len(start), dataset.vocab_size)
@@ -78,7 +84,7 @@ def eval():
             print("Model says:\n")
             print(start + sentence)
     except KeyboardInterrupt:
-        print("\n\nPromise you'll call me back!")
+        print("\n\n" + random.choice(quit_msgs))
 
 
 ################################################################################
