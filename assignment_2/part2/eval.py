@@ -24,7 +24,7 @@ from tensorboardX import SummaryWriter
 # Some lighthearted tomfoolery
 quit_msgs = ["Promise you'll call me back!",
              "Am I not enough of a poet for you?",
-             "You won't find another literary genious like me!",
+             "You won't find another literary genius like me!",
              "I thought we had something going here...",
              "Fine! I won't miss you."]
 
