@@ -22,11 +22,14 @@ from tensorboardX import SummaryWriter
 ################################################################################
 
 # Some lighthearted tomfoolery
-quit_msgs = ["Promise you'll call me back!",
-             "Am I not enough of a poet for you?",
-             "You won't find another literary genius like me!",
-             "I thought we had something going here...",
-             "Fine! I won't miss you."]
+quit_msgs = [
+    "Promise you'll call me back!",
+    "Am I not enough of a poet for you?",
+    "You won't find another literary genius like me!",
+    "I thought we had something going here...",
+    "Fine! I won't miss you.",
+]
+
 
 def get_one_hot(start, dataset):
     one_hot = torch.zeros(len(start), dataset.vocab_size)
@@ -36,10 +39,10 @@ def get_one_hot(start, dataset):
 
 
 def load_model(model):
-    if os.path.exists('dumas_model.tar'):
-        checkpoint = torch.load('dumas_model.tar')
-        model.load_state_dict(checkpoint['model_state_dict'])
-        steps = checkpoint['step']
+    if os.path.exists("dumas_model.tar"):
+        checkpoint = torch.load("dumas_model.tar")
+        model.load_state_dict(checkpoint["model_state_dict"])
+        steps = checkpoint["step"]
     else:
         print("Model not found!")
         quit()
@@ -57,9 +60,9 @@ def eval():
     temp = config.temperature
 
     # Initialize the model that we are going to use
-    model = TextGenerationModel(config.batch_size,
-                                config.seq_length,
-                                dataset.vocab_size)
+    model = TextGenerationModel(
+        config.batch_size, config.seq_length, dataset.vocab_size
+    )
 
     # Load model, if there's any model to load
     model, steps = load_model(model)
@@ -79,7 +82,9 @@ def eval():
                 continue
 
             # Generate the rest of the sentence
-            sentence = dataset.convert_to_string(model.cmd_generate(start_oh, temp, config.seq_length))
+            sentence = dataset.convert_to_string(
+                model.cmd_generate(start_oh, temp, config.seq_length)
+            )
 
             print("Model says:\n")
             print(start + sentence)
@@ -95,10 +100,27 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # Model params
-    parser.add_argument('--txt_file', type=str, default='data/dumas.txt', help="Path to a .txt file to train on")
-    parser.add_argument('--seq_length', type=int, default=30, help='Length of an input sequence')
-    parser.add_argument('--batch_size', type=int, default=64, help='Number of examples to process in a batch')
-    parser.add_argument('--temperature', type=float, default=1.0, help='Temperature when sampling the next character')
+    parser.add_argument(
+        "--txt_file",
+        type=str,
+        default="data/dumas.txt",
+        help="Path to a .txt file to train on",
+    )
+    parser.add_argument(
+        "--seq_length", type=int, default=30, help="Length of an input sequence"
+    )
+    parser.add_argument(
+        "--batch_size",
+        type=int,
+        default=64,
+        help="Number of examples to process in a batch",
+    )
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=1.0,
+        help="Temperature when sampling the next character",
+    )
 
     config = parser.parse_args()
 

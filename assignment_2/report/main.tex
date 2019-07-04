@@ -22,6 +22,7 @@
 \renewcommand{\thesubsubsection}{\thesubsection\,\alph{subsubsection})}
 \newcommand{\del}[2]{\ensuremath{\frac{\partial #1}{\partial #2}}}
 \newcommand{\Ell}{\ensuremath{\mathcal{L}}}
+\lstset{basicstyle=\ttfamily\footnotesize,breaklines=true}
 
 \title{Assignment 2\\Recurrent Neural Networks and Graph Neural Networks}
 
@@ -172,11 +173,80 @@
 
   \begin{enumerate}[label=\textbf{(\alph*)}]
     \item
+    The model was implemented and trained as instructed. A dropout rate of $0.2$ was used, along with a learning rate decay of $0.96$ every $5\,000$ steps. All other parameters were set to default. The model's performance plateaud around an accuracy of $0.1$ and a loss of $1.2$, and was trained for $50\,000$ steps on two novels by Alexandre Dumas. While low, the low accuracy seems reasonable for two reasons. The first is that the dataset itself is around $2.5$ million characters long, with a vocabulary size of $81$. This means that, in $50\,000$ steps, the whole dataset is seen only one and a half times. This is not enough to memorise any full sequence of words, and the model rather learns a generalised pattern. The other issue is that the english language uses many short words, in such a way that given one word it will be very hard to accurately predict which word follows: for instance, the verb `stand' may be followed by `up' just as likely as `down' or `still'. This makes sentences often unpredictable.
+
     \item
+    Here I report five sentences of length $T = 30$ obtained at evenly spaced intervals during training: starting at step $0$ every $1\,000$ steps.
+    \begin{lstlisting}
+  [0] :In'])G*T-Ms9F
+  VgKrTlmlha5p7!y
+
+  [1000]  to me to ke elouthreated pall
+
+  [2000] for ihune in not plEand back t
+
+  [3000] an which! d'Artagnan.
+  EI.
+  If t
+
+  [4000]  of Madame de Treville. "I nev
+    \end{lstlisting}
+
+    The progress of the LSTM's training is clear. In the first example, we see a completely random sequence of characters, with no apparent pattern.
+
+    The second example shows a twofold improvement. The characters now come from a specific subset, which is that of lowercase letters, the most common type of characters in the dataset. Along with lowercase letters, spaces are now distributed in a reasonable way: the words have a reasonable length. Additionally, small very common words such as `to' and `me' appear in the sentence.
+
+    The third example shows a slight improvement over the previous, and slightly longer words appear, such as `for' and `back'.
+
+    By the fourth example not all words are real, but some common longer words have been learned: `d'Artagnan' is the name of the main character in the two training novels, so it has been learned despite its length.
+
+    Finally, by the last example most words have been learned, and some of the outputs are written in good English. In this case, the whole sentence could very well be a small extract from a sentence, with accurate punctuation.
+
     \item
+    The temperature parameter $T$ was included by computing the sampling probability $\textbf{p}_T$ as:
+
+    \begin{align*}
+      \textbf{p}_T &= \sigma\left( \frac{\textbf{p}}{T} \right)
+    \end{align*}
+
+    Where $\sigma$ is the softmax function.
+
+    Here I report two sentences per temperature setting.
+    \begin{lstlisting}
+  [ 0.5 ] e as a specious and things of
+  [ 0.5 ] enting the pieces of the great
+  [ 1.0 ] than for him, in order
+  that gr
+  [ 1.0 ]  CALLET
+  Fortunity, it murmured
+  [ 2.0 ] Amenutny! Onage!"
+
+  Muria, knel
+  [ 2.0 ] O2N THEEINFOU;-Cord? Nothing c
+    \end{lstlisting}
+
+    We know, looking at the formula, that a low temperature will yield a more peaked sampling probability distribution, meaning that the model's best guess' probability will tend towards $1$. This is reflected in the sentences produced with $T = 0.5$, which contain mostly well-formed english words, or at least believable ones. As the temperature increases to $1.0$ which is the standard sampling strategy, the sentences still seem believable but there are slight inconsistencies, which happen for instance as semi-random newlines. At $2.0$, the sentences look very strange, as some words are real while others seem like inconsistent sequences of common characters. This makes sense as the sampling strategy is tending more towards uniform sampling.
   \end{enumerate}
 
   \item
+  Here I include three sentences produced with a temperature of $0.7$ and $T = 60$. Note that the newlines in the first and third example were inserted manually to avoid the lines extending over the page's margins.
+
+  \begin{verbatim}
+  [Start] The boy
+  [Model says] The boy and the sentiments of the end of the street
+  and still so muc
+
+  [Start] Athos decided
+  [Model says] Athos decided the door of the staircase.
+
+  “Well,” said Manicamp, “the devi
+
+  [Start] Madam
+  [Model says] Madame, and said to her eyes from his hand to the four
+  friends to
+  \end{verbatim}
+
+  The outputs show that, while the model is able to form coherent words and semi-coherent sentences, it struggles with long term dependencies and broad syntactical structures. This is reasonable since it was trained on short text fragments that can't contain such long structures.
 \end{enumerate}
 
 %################################# NEW SECTION ##################################
@@ -190,7 +260,10 @@
 
   \begin{enumerate}[label=\textbf{(\alph*)}]
     \item
+    The structural information in the GCN layer is used via the multiplication with matrix $\hat{A}$. This matrix contains the normalized graph structure, which means that it captures the connections between nodes in the graph, allowing for the propagation of information between neighboring nodes. This way, the information so far propagated to each node is further propagated to that node's neighbors, performing what could be described as message passing.
+
     \item
+    Since each layer propagates information through one `hop' or neighborhood, covering three hops would require three layers.
   \end{enumerate}
 \end{enumerate}
 
@@ -200,6 +273,11 @@
 \begin{enumerate}[label=\textbf{3.\arabic*}]
   \setcounter{enumi}{1}
   \item
+  In \cite{segmentation} Graph Neural Networks are used for pixel segmentation in computer vision. Using k-nearest neighbors, a graph is produced where nodes correspond to sets of pixels in the image. The graph is then used as input to a GNN to produce pixel-level representations used then for semantic segmentation.
+
+  \cite{molecular} shows an approach for molecular fingerprinting which uses GCNs on the graph structure of molecules to generate useful representations of said molecules, which are then used in a variety of tasks.
+
+  Another interesting application is shown in \cite{relational}, which reports state-of-the-art results in text-based question answering using relation networks, thus operating on text and images. This application is remarkable in that it operates on knowledge graphs, and it allows for improved performance on general reasoning tasks by including relational information.
 \end{enumerate}
 
 %###################### NEW SUBSECTION #######################
@@ -211,16 +289,26 @@
 
   \begin{enumerate}[label=\textbf{(\alph*)}]
     \item
+    The first thing to realize is that the two types of networks work best with two similar but distinct types of data. RNNs such as LSTMs work best with sequential data, where there exist dependencies and interactions across the sequence's single dimension. On the other hand, GNNs such as CGNs work best with graph data, meaning that the sequences under consideration may split, and contain cyclical relations.
+
+    Choosing RNNs over GNNs for a certain task might be a good choice when there is no graph data available for a certain task, while GNNs might be more of a general choice for when this data is available.
+
+    As an example, consider the task of sentence or paragraph representation. An LSTM might be a good choice for such a task, since text is sequential and, in the absence of more information, its relational dependencies flow forward in the sequence. In other words, textual elements normally depend on what came before, and rarely on what comes after. RNNs are able to encapsulate the forward propagating infromation and use it to contextualize each new word or character's impact on the representation.
+
+    On the other hand, if we have information about the tree structure of the text that we are using, performing the same task using some GNN-based architecture might yield better results. The GNN will be able to capture relations within the text which are not only forward flowing, but also backward flowing. By using the tree structure of a sentence, the hierarchical position of each word in the syntactic tree would allow for top-down and bottom-up influences between different hierarchical levels of the tree. This might allow for more detailed and accurate representations of sentences.
+
     \item
+    RNNs and GNNs could be used in a combined model to produce a generalized version of GCNs. In its basic definition, such a model could be defined as:
+
+    \begin{align*}
+      H^{(t+1)} &= f\left( \hat{A} H^{(t)} W \right)
+    \end{align*}
+
+    Where the weight matrix $W$ is shared across all cells of the network. This could be applied on any task that GCN is already applied to, and it would allow for a propagation across an arbitrary number of neighborhoods depending on the time-steps that are performed. Unfortunately, this type of network would still be highly susceptible to the vanishing and exploding gradient problems.
   \end{enumerate}
 \end{enumerate}
 
-% \begin{figure}[h]
-%     \centering
-%     \includegraphics[scale=0.7]{img/convnet_results.png}
-%     \caption{Training and test accuracies and losses for the ConvNet model. The test accuracies and losses are produced every 500 steps. The final test accuracy was $77.3\%$}
-%     \label{fig:convnet_results}
-% \end{figure}
-
+\bibliography{bibliography}
+\bibliographystyle{unsrt}
 
 \end{document}
